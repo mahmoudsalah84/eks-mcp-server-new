@@ -1,0 +1,19 @@
+2025-04-17 13:52:25,021 - mcp_client - INFO - Loaded configuration from /Users/mslahdin/eks-mcp-server-new/client_config.json
+2025-04-17 13:52:25,021 - mcp_client - INFO - Starting MCP Chat Client V6 - Server: http://54.221.145.15:8000, Region: us-east-1, Model: anthropic.claude-3-sonnet-20240229-v1:0
+2025-04-17 13:52:25,021 - mcp_client - INFO - Discovering operations from MCP server: http://54.221.145.15:8000
+2025-04-17 13:52:25,443 - mcp_client - INFO - Discovered 11 operations from server
+2025-04-17 13:52:25,453 - botocore.credentials - INFO - Found credentials in shared credentials file: ~/.aws/credentials
+2025-04-17 13:52:25,545 - mcp_client - INFO - Initializing Bedrock inline agent
+2025-04-17 13:52:25,545 - mcp_client - INFO - Gathering cluster information for region: us-east-1
+2025-04-17 13:52:25,545 - mcp_client - INFO - MCP Server Request - Operation: list_clusters, Parameters: {"region": "us-east-1"}
+2025-04-17 13:52:26,225 - mcp_client - INFO - MCP Server Response - Status: success, Operation: list_clusters
+2025-04-17 13:52:26,225 - mcp_client - INFO - Found 1 EKS clusters
+2025-04-17 13:52:26,225 - mcp_client - INFO - Getting details for cluster: sample-eks-cluster
+2025-04-17 13:52:26,226 - mcp_client - INFO - MCP Server Request - Operation: describe_cluster, Parameters: {"cluster_name": "sample-eks-cluster", "region": "us-east-1"}
+2025-04-17 13:52:26,875 - mcp_client - INFO - MCP Server Response - Status: success, Operation: describe_cluster
+2025-04-17 13:52:26,877 - mcp_client - INFO - MCP Server Request - Operation: list_nodegroups, Parameters: {"cluster_name": "sample-eks-cluster", "region": "us-east-1"}
+2025-04-17 13:52:27,627 - mcp_client - INFO - MCP Server Response - Status: success, Operation: list_nodegroups
+2025-04-17 13:52:27,629 - mcp_client - INFO - MCP Server Request - Operation: list_namespaces, Parameters: {"cluster_name": "sample-eks-cluster", "region": "us-east-1"}
+2025-04-17 13:52:35,013 - mcp_client - INFO - MCP Server Response - Status: error, Operation: list_namespaces
+2025-04-17 13:52:35,014 - mcp_client - ERROR - MCP Server Error - Operation: list_namespaces, Response: {"status": "error", "data": null, "error": "Error executing kubectl command: E0417 09:52:30.651399     155 memcache.go:265] \"Unhandled Error\" err=\"couldn't get current server API group list: the server has asked for the client to provide credentials\"\nE0417 09:52:31.669131     155 memcache.go:265] \"Unhandled Error\" err=\"couldn't get current server API group list: the server has asked for the client to provide credentials\"\nE0417 09:52:32.778152     155 memcache.go:265] \"Unhandled Error\" err=\"couldn't get current server API group list: the server has asked for the client to provide credentials\"\nE0417 09:52:33.948483     155 memcache.go:265] \"Unhandled Error\" err=\"couldn't get current server API group list: the server has asked for the client to provide credentials\"\nE0417 09:52:35.167801     155 memcache.go:265] \"Unhandled Error\" err=\"couldn't get current server API group list: the server has asked for the client to provide credentials\"\nerror: You must be logged in to the server (the server has asked for the client to provide credentials)\n", "error_code": "KUBERNETES_ERROR"}
+2025-04-17 13:52:35,016 - mcp_client - INFO - Finished gathering cluster information

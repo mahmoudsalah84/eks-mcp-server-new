@@ -1,0 +1,19 @@
+2025-04-17 12:35:51,752 - mcp_client - INFO - Loaded configuration from /Users/mslahdin/eks-mcp-server-new/client_config.json
+2025-04-17 12:35:51,752 - mcp_client - INFO - Starting MCP Chat Client V6 - Server: http://44.221.80.23:8000, Region: us-east-1, Model: anthropic.claude-3-sonnet-20240229-v1:0
+2025-04-17 12:35:51,752 - mcp_client - INFO - Discovering operations from MCP server: http://44.221.80.23:8000
+2025-04-17 12:35:52,149 - mcp_client - INFO - Discovered 11 operations from server
+2025-04-17 12:35:52,163 - botocore.credentials - INFO - Found credentials in shared credentials file: ~/.aws/credentials
+2025-04-17 12:35:52,245 - mcp_client - INFO - Initializing Bedrock inline agent
+2025-04-17 12:35:52,245 - mcp_client - INFO - Gathering cluster information for region: us-east-1
+2025-04-17 12:35:52,245 - mcp_client - INFO - MCP Server Request - Operation: list_clusters, Parameters: {"region": "us-east-1"}
+2025-04-17 12:35:52,881 - mcp_client - INFO - MCP Server Response - Status: success, Operation: list_clusters
+2025-04-17 12:35:52,881 - mcp_client - INFO - Found 1 EKS clusters
+2025-04-17 12:35:52,881 - mcp_client - INFO - Getting details for cluster: sample-eks-cluster
+2025-04-17 12:35:52,881 - mcp_client - INFO - MCP Server Request - Operation: describe_cluster, Parameters: {"cluster_name": "sample-eks-cluster", "region": "us-east-1"}
+2025-04-17 12:35:53,465 - mcp_client - INFO - MCP Server Response - Status: success, Operation: describe_cluster
+2025-04-17 12:35:53,466 - mcp_client - INFO - MCP Server Request - Operation: list_nodegroups, Parameters: {"cluster_name": "sample-eks-cluster", "region": "us-east-1"}
+2025-04-17 12:35:54,112 - mcp_client - INFO - MCP Server Response - Status: success, Operation: list_nodegroups
+2025-04-17 12:35:54,112 - mcp_client - INFO - MCP Server Request - Operation: list_namespaces, Parameters: {"cluster_name": "sample-eks-cluster", "region": "us-east-1"}
+2025-04-17 12:35:54,580 - mcp_client - INFO - MCP Server Response - Status: error, Operation: list_namespaces
+2025-04-17 12:35:54,580 - mcp_client - ERROR - MCP Server Error - Operation: list_namespaces, Response: {"status": "error", "data": null, "error": "Error executing kubectl command: E0417 08:35:54.717807      10 memcache.go:265] \"Unhandled Error\" err=\"couldn't get current server API group list: Get \\\"http://localhost:8080/api?timeout=32s\\\": dial tcp 127.0.0.1:8080: connect: connection refused\"\nE0417 08:35:54.719277      10 memcache.go:265] \"Unhandled Error\" err=\"couldn't get current server API group list: Get \\\"http://localhost:8080/api?timeout=32s\\\": dial tcp 127.0.0.1:8080: connect: connection refused\"\nE0417 08:35:54.720688      10 memcache.go:265] \"Unhandled Error\" err=\"couldn't get current server API group list: Get \\\"http://localhost:8080/api?timeout=32s\\\": dial tcp 127.0.0.1:8080: connect: connection refused\"\nE0417 08:35:54.722125      10 memcache.go:265] \"Unhandled Error\" err=\"couldn't get current server API group list: Get \\\"http://localhost:8080/api?timeout=32s\\\": dial tcp 127.0.0.1:8080: connect: connection refused\"\nE0417 08:35:54.723443      10 memcache.go:265] \"Unhandled Error\" err=\"couldn't get current server API group list: Get \\\"http://localhost:8080/api?timeout=32s\\\": dial tcp 127.0.0.1:8080: connect: connection refused\"\nThe connection to the server localhost:8080 was refused - did you specify the right host or port?\n", "error_code": "KUBERNETES_ERROR"}
+2025-04-17 12:35:54,581 - mcp_client - INFO - Finished gathering cluster information

@@ -1,0 +1,43 @@
+{
+  "family": "eks-mcp-server-new",
+  "executionRoleArn": "arn:aws:iam::264477013790:role/ecsTaskExecutionRole",
+  "taskRoleArn": "arn:aws:iam::264477013790:role/eks-mcp-server-role",
+  "networkMode": "awsvpc",
+  "containerDefinitions": [
+    {
+      "name": "eks-mcp-server-new",
+      "image": "264477013790.dkr.ecr.us-east-1.amazonaws.com/eks-mcp-server-new:latest",
+      "essential": true,
+      "portMappings": [
+        {
+          "containerPort": 8000,
+          "hostPort": 8000,
+          "protocol": "tcp"
+        }
+      ],
+      "environment": [
+        {
+          "name": "MCP_API_KEY",
+          "value": "YOUR_API_KEY_HERE"
+        },
+        {
+          "name": "JWT_SECRET_KEY",
+          "value": "${JWT_SECRET_KEY}"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/eks-mcp-server-new",
+          "awslogs-region": "us-east-1",
+          "awslogs-stream-prefix": "ecs"
+        }
+      }
+    }
+  ],
+  "requiresCompatibilities": [
+    "FARGATE"
+  ],
+  "cpu": "1024",
+  "memory": "2048"
+}

@@ -1,0 +1,44 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "eks:DescribeCluster",
+        "eks:ListClusters",
+        "eks:DescribeNodegroup",
+        "eks:ListNodegroups",
+        "eks:ListFargateProfiles",
+        "eks:DescribeFargateProfile",
+        "eks:ListAddons",
+        "eks:DescribeAddon",
+        "eks:ListIdentityProviderConfigs",
+        "eks:DescribeIdentityProviderConfig"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "sts:AssumeRole",
+        "sts:GetCallerIdentity"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+      ],
+      "Resource": "arn:aws:logs:*:*:log-group:/ecs/eks-mcp-server-new:*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "eks:DescribeCluster"
+      ],
+      "Resource": "arn:aws:eks:us-east-1:264477013790:cluster/sample-eks-cluster"
+    }
+  ]
+}

@@ -1,0 +1,826 @@
+"""
+EKS MCP Server - FastAPI implementation
+"""
+
+import logging
+import os
+import subprocess
+from typing import Dict, List, Any, Optional
+from fastapi import FastAPI, HTTPException, Depends, Header, Request
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel
+import boto3
+import json
+import time
+import urllib3
+
+# Disable SSL warnings for self-signed certificates
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+# Import the KubernetesOperations class
+from k8s_operations import KubernetesOperations
+# Import the KubernetesOperationsSDK class
+from k8s_operations_sdk import KubernetesOperationsSDK
+# Import the KubernetesOperationsSDKV2 class
+from k8s_operations_sdk_v2 import KubernetesOperationsSDKV2
+# Import the EKSOperations class
+from eks_operations import EKSOperations
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Initialize FastAPI app
+app = FastAPI(
+    title="EKS MCP Server",
+    description="Model Context Protocol (MCP) server for EKS operations",
+    version="1.0.0"
+)
+
+# Initialize KubernetesOperations
+k8s_ops = KubernetesOperations()
+# Initialize KubernetesOperationsSDK
+k8s_sdk_ops = KubernetesOperationsSDK()
+# Initialize KubernetesOperationsSDKV2
+k8s_sdk_v2_ops = KubernetesOperationsSDKV2()
+# Initialize EKSOperations
+eks_ops = EKSOperations()
+
+# API key for simple authentication
+API_KEY = os.environ.get("MCP_API_KEY", "a408a0d54f41b57f4c9f387f785fcce6")
+
+# Dependency for API key validation
+async def verify_api_key(x_api_key: str = Header(None)):
+    if x_api_key != API_KEY:
+        raise HTTPException(status_code=401, detail="Invalid API key")
+    return x_api_key
+
+# Health check endpoint
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy"}
+
+# Debug endpoint for troubleshooting
+@app.post("/debug")
+async def debug_endpoint(request: Request, api_key: str = Depends(verify_api_key)):
+    try:
+        body = await request.json()
+        command = body.get("command", "")
+        
+        if not command:
+            return {
+                "status": "error",
+                "message": "No command provided"
+            }
+        
+        # Execute the command and capture output
+        result = subprocess.run(
+            command,
+            shell=True,
+            capture_output=True,
+            text=True
+        )
+        
+        return {
+            "status": "success",
+            "stdout": result.stdout,
+            "stderr": result.stderr,
+            "exit_code": result.returncode
+        }
+    except Exception as e:
+        logger.error(f"Error in debug endpoint: {str(e)}")
+        return {
+            "status": "error",
+            "message": str(e)
+        }
+
+# MCP operations discovery endpoint
+@app.get("/mcp/v1/operations")
+async def get_operations(api_key: str = Depends(verify_api_key)):
+    operations = [
+        {
+            "name": "list_clusters",
+            "description": "List all EKS clusters in a region",
+            "parameters": {
+                "region": "AWS region (e.g., us-east-1)"
+            }
+        },
+        {
+            "name": "describe_cluster",
+            "description": "Get detailed information about an EKS cluster",
+            "parameters": {
+                "cluster_name": "Name of the EKS cluster",
+                "region": "AWS region (e.g., us-east-1)"
+            }
+        },
+        {
+            "name": "list_namespaces",
+            "description": "List all namespaces in an EKS cluster",
+            "parameters": {
+                "cluster_name": "Name of the EKS cluster",
+                "region": "AWS region (e.g., us-east-1)"
+            }
+        },
+        {
+            "name": "list_nodegroups",
+            "description": "List all nodegroups in an EKS cluster",
+            "parameters": {
+                "cluster_name": "Name of the EKS cluster",
+                "region": "AWS region (e.g., us-east-1)"
+            }
+        },
+        {
+            "name": "describe_nodegroup",
+            "description": "Get detailed information about a nodegroup",
+            "parameters": {
+                "cluster_name": "Name of the EKS cluster",
+                "nodegroup_name": "Name of the nodegroup",
+                "region": "AWS region (e.g., us-east-1)"
+            }
+        },
+        {
+            "name": "list_pods",
+            "description": "List all pods in a namespace",
+            "parameters": {
+                "cluster_name": "Name of the EKS cluster",
+                "namespace": "Kubernetes namespace",
+                "region": "AWS region (e.g., us-east-1)"
+            }
+        },
+        {
+            "name": "describe_pod",
+            "description": "Get detailed information about a pod",
+            "parameters": {
+                "cluster_name": "Name of the EKS cluster",
+                "namespace": "Kubernetes namespace",
+                "pod_name": "Name of the pod",
+                "region": "AWS region (e.g., us-east-1)"
+            }
+        },
+        {
+            "name": "get_deployments",
+            "description": "List all deployments in a namespace",
+            "parameters": {
+                "cluster_name": "Name of the EKS cluster",
+                "namespace": "Kubernetes namespace",
+                "region": "AWS region (e.g., us-east-1)"
+            }
+        },
+        {
+            "name": "describe_deployment",
+            "description": "Get detailed information about a deployment",
+            "parameters": {
+                "cluster_name": "Name of the EKS cluster",
+                "namespace": "Kubernetes namespace",
+                "deployment_name": "Name of the deployment",
+                "region": "AWS region (e.g., us-east-1)"
+            }
+        },
+        {
+            "name": "get_services",
+            "description": "List all services in a namespace",
+            "parameters": {
+                "cluster_name": "Name of the EKS cluster",
+                "namespace": "Kubernetes namespace",
+                "region": "AWS region (e.g., us-east-1)"
+            }
+        },
+        {
+            "name": "get_pod_logs",
+            "description": "Get logs from a pod",
+            "parameters": {
+                "cluster_name": "Name of the EKS cluster",
+                "namespace": "Kubernetes namespace",
+                "pod_name": "Name of the pod",
+                "container": "Container name (optional)",
+                "tail": "Number of lines to return (optional, default: 100)",
+                "region": "AWS region (e.g., us-east-1)"
+            }
+        }
+    ]
+    
+    return {
+        "status": "success",
+        "data": {"operations": operations},
+        "error": None,
+        "error_code": None
+    }
+
+# MCP query endpoint
+@app.post("/mcp/v1/query")
+async def query(request: Request, api_key: str = Depends(verify_api_key)):
+    try:
+        # Parse request body
+        body = await request.json()
+        operation = body.get("operation")
+        parameters = body.get("parameters", {})
+        
+        logger.info(f"Received operation: {operation} with parameters: {parameters}")
+        
+        # Process operation
+        try:
+            if operation == "list_clusters":
+                return handle_list_clusters(parameters)
+            elif operation == "describe_cluster":
+                return handle_describe_cluster(parameters)
+            elif operation == "list_namespaces":
+                return handle_list_namespaces(parameters)
+            elif operation == "list_nodegroups":
+                return handle_list_nodegroups(parameters)
+            elif operation == "describe_nodegroup":
+                return handle_describe_nodegroup(parameters)
+            elif operation == "list_pods":
+                return handle_list_pods(parameters)
+            elif operation == "describe_pod":
+                return handle_describe_pod(parameters)
+            elif operation == "get_deployments":
+                return handle_get_deployments(parameters)
+            elif operation == "describe_deployment":
+                return handle_describe_deployment(parameters)
+            elif operation == "get_services":
+                return handle_get_services(parameters)
+            elif operation == "get_pod_logs":
+                return handle_get_pod_logs(parameters)
+            else:
+                logger.warning(f"Unsupported operation: {operation}")
+                return {
+                    "status": "error",
+                    "data": None,
+                    "error": f"Unsupported operation: {operation}",
+                    "error_code": "UNSUPPORTED_OPERATION"
+                }
+        except Exception as e:
+            logger.error(f"Error processing operation {operation}: {str(e)}")
+            return {
+                "status": "error",
+                "data": None,
+                "error": str(e),
+                "error_code": "OPERATION_ERROR"
+            }
+    except Exception as e:
+        logger.error(f"Error parsing request: {str(e)}")
+        return {
+            "status": "error",
+            "data": None,
+            "error": str(e),
+            "error_code": "REQUEST_ERROR"
+        }
+
+def handle_list_clusters(parameters: Dict[str, Any]) -> Dict[str, Any]:
+    """Handle list_clusters operation"""
+    region = parameters.get("region", "us-east-1")
+    
+    try:
+        logger.info(f"Listing EKS clusters in region: {region}")
+        
+        # Use the EKSOperations class to list clusters
+        clusters = eks_ops.list_clusters(region)
+        
+        return {
+            "status": "success",
+            "data": {"clusters": clusters},
+            "error": None,
+            "error_code": None
+        }
+    except Exception as e:
+        logger.error(f"Error listing EKS clusters in region {region}: {str(e)}")
+        return {
+            "status": "error",
+            "data": None,
+            "error": str(e),
+            "error_code": "AWS_ERROR"
+        }
+
+def handle_describe_cluster(parameters: Dict[str, Any]) -> Dict[str, Any]:
+    """Handle describe_cluster operation"""
+    region = parameters.get("region", "us-east-1")
+    cluster_name = parameters.get("cluster_name")
+    
+    if not cluster_name:
+        return {
+            "status": "error",
+            "data": None,
+            "error": "Missing required parameter: cluster_name",
+            "error_code": "MISSING_PARAMETER"
+        }
+    
+    try:
+        logger.info(f"Describing EKS cluster: {cluster_name} in region: {region}")
+        
+        # Use the EKSOperations class to describe the cluster
+        cluster_info = eks_ops.describe_cluster(region, cluster_name)
+        
+        return {
+            "status": "success",
+            "data": {"cluster": cluster_info},
+            "error": None,
+            "error_code": None
+        }
+    except Exception as e:
+        logger.error(f"Error describing EKS cluster {cluster_name} in region {region}: {str(e)}")
+        return {
+            "status": "error",
+            "data": None,
+            "error": str(e),
+            "error_code": "AWS_ERROR"
+        }
+
+def handle_list_namespaces(parameters: Dict[str, Any]) -> Dict[str, Any]:
+    """Handle list_namespaces operation"""
+    region = parameters.get("region", "us-east-1")
+    cluster_name = parameters.get("cluster_name")
+    
+    if not cluster_name:
+        return {
+            "status": "error",
+            "data": None,
+            "error": "Missing required parameter: cluster_name",
+            "error_code": "MISSING_PARAMETER"
+        }
+    
+    try:
+        logger.info(f"Listing namespaces for cluster: {cluster_name} in region: {region}")
+        
+        # Try using the SDK implementation first
+        try:
+            # Use the KubernetesOperationsSDK class to get namespaces
+            namespaces = k8s_sdk_v2_ops.get_namespaces(cluster_name, region)
+            
+            return {
+                "status": "success",
+                "data": {"namespaces": namespaces},
+                "error": None,
+                "error_code": None
+            }
+        except Exception as sdk_error:
+            logger.warning(f"SDK implementation failed: {str(sdk_error)}, falling back to kubectl")
+            
+            # Fall back to kubectl implementation
+            namespaces = k8s_ops.get_namespaces(cluster_name, region)
+            
+            return {
+                "status": "success",
+                "data": {"namespaces": namespaces},
+                "error": None,
+                "error_code": None
+            }
+    except Exception as e:
+        logger.error(f"Error listing namespaces for cluster {cluster_name} in region {region}: {str(e)}")
+        return {
+            "status": "error",
+            "data": None,
+            "error": str(e),
+            "error_code": "KUBERNETES_ERROR"
+        }
+
+def handle_list_nodegroups(parameters: Dict[str, Any]) -> Dict[str, Any]:
+    """Handle list_nodegroups operation"""
+    region = parameters.get("region", "us-east-1")
+    cluster_name = parameters.get("cluster_name")
+    
+    if not cluster_name:
+        return {
+            "status": "error",
+            "data": None,
+            "error": "Missing required parameter: cluster_name",
+            "error_code": "MISSING_PARAMETER"
+        }
+    
+    try:
+        logger.info(f"Listing nodegroups for cluster: {cluster_name} in region: {region}")
+        
+        # Use the EKSOperations class to list nodegroups
+        nodegroups = eks_ops.list_nodegroups(region, cluster_name)
+        
+        return {
+            "status": "success",
+            "data": {"nodegroups": nodegroups},
+            "error": None,
+            "error_code": None
+        }
+    except Exception as e:
+        logger.error(f"Error listing nodegroups for cluster {cluster_name} in region {region}: {str(e)}")
+        return {
+            "status": "error",
+            "data": None,
+            "error": str(e),
+            "error_code": "AWS_ERROR"
+        }
+
+def handle_describe_nodegroup(parameters: Dict[str, Any]) -> Dict[str, Any]:
+    """Handle describe_nodegroup operation"""
+    region = parameters.get("region", "us-east-1")
+    cluster_name = parameters.get("cluster_name")
+    nodegroup_name = parameters.get("nodegroup_name")
+    
+    if not cluster_name:
+        return {
+            "status": "error",
+            "data": None,
+            "error": "Missing required parameter: cluster_name",
+            "error_code": "MISSING_PARAMETER"
+        }
+    
+    if not nodegroup_name:
+        return {
+            "status": "error",
+            "data": None,
+            "error": "Missing required parameter: nodegroup_name",
+            "error_code": "MISSING_PARAMETER"
+        }
+    
+    try:
+        logger.info(f"Describing nodegroup: {nodegroup_name} for cluster: {cluster_name} in region: {region}")
+        
+        # Use the EKSOperations class to describe the nodegroup
+        nodegroup_info = eks_ops.describe_nodegroup(region, cluster_name, nodegroup_name)
+        
+        return {
+            "status": "success",
+            "data": {"nodegroup": nodegroup_info},
+            "error": None,
+            "error_code": None
+        }
+    except Exception as e:
+        logger.error(f"Error describing nodegroup {nodegroup_name} for cluster {cluster_name} in region {region}: {str(e)}")
+        return {
+            "status": "error",
+            "data": None,
+            "error": str(e),
+            "error_code": "AWS_ERROR"
+        }
+
+def handle_list_pods(parameters: Dict[str, Any]) -> Dict[str, Any]:
+    """Handle list_pods operation"""
+    region = parameters.get("region", "us-east-1")
+    cluster_name = parameters.get("cluster_name")
+    namespace = parameters.get("namespace")
+    
+    if not cluster_name:
+        return {
+            "status": "error",
+            "data": None,
+            "error": "Missing required parameter: cluster_name",
+            "error_code": "MISSING_PARAMETER"
+        }
+    
+    if not namespace:
+        return {
+            "status": "error",
+            "data": None,
+            "error": "Missing required parameter: namespace",
+            "error_code": "MISSING_PARAMETER"
+        }
+    
+    try:
+        logger.info(f"Listing pods in namespace: {namespace} for cluster: {cluster_name} in region: {region}")
+        
+        # Try using the SDK implementation first
+        try:
+            # Use the KubernetesOperationsSDK class to get pods
+            pods = k8s_sdk_v2_ops.get_pods(cluster_name, namespace, region)
+            
+            return {
+                "status": "success",
+                "data": {"pods": pods},
+                "error": None,
+                "error_code": None
+            }
+        except Exception as sdk_error:
+            logger.warning(f"SDK implementation failed: {str(sdk_error)}, falling back to kubectl")
+            
+            # Fall back to kubectl implementation
+            pods = k8s_ops.get_pods(cluster_name, namespace, region)
+            
+            return {
+                "status": "success",
+                "data": {"pods": pods},
+                "error": None,
+                "error_code": None
+            }
+    except Exception as e:
+        logger.error(f"Error listing pods in namespace {namespace} for cluster {cluster_name} in region {region}: {str(e)}")
+        return {
+            "status": "error",
+            "data": None,
+            "error": str(e),
+            "error_code": "KUBERNETES_ERROR"
+        }
+
+def handle_describe_pod(parameters: Dict[str, Any]) -> Dict[str, Any]:
+    """Handle describe_pod operation"""
+    region = parameters.get("region", "us-east-1")
+    cluster_name = parameters.get("cluster_name")
+    namespace = parameters.get("namespace")
+    pod_name = parameters.get("pod_name")
+    
+    if not cluster_name:
+        return {
+            "status": "error",
+            "data": None,
+            "error": "Missing required parameter: cluster_name",
+            "error_code": "MISSING_PARAMETER"
+        }
+    
+    if not namespace:
+        return {
+            "status": "error",
+            "data": None,
+            "error": "Missing required parameter: namespace",
+            "error_code": "MISSING_PARAMETER"
+        }
+    
+    if not pod_name:
+        return {
+            "status": "error",
+            "data": None,
+            "error": "Missing required parameter: pod_name",
+            "error_code": "MISSING_PARAMETER"
+        }
+    
+    try:
+        logger.info(f"Describing pod: {pod_name} in namespace: {namespace} for cluster: {cluster_name} in region: {region}")
+        
+        # Try using the SDK implementation first
+        try:
+            # Use the KubernetesOperationsSDK class to describe the pod
+            pod_info = k8s_sdk_v2_ops.describe_pod(cluster_name, namespace, pod_name, region)
+            
+            return {
+                "status": "success",
+                "data": {"pod": pod_info},
+                "error": None,
+                "error_code": None
+            }
+        except Exception as sdk_error:
+            logger.warning(f"SDK implementation failed: {str(sdk_error)}, falling back to kubectl")
+            
+            # Fall back to kubectl implementation
+            pod_info = k8s_ops.describe_pod(cluster_name, namespace, pod_name, region)
+            
+            return {
+                "status": "success",
+                "data": {"pod": pod_info},
+                "error": None,
+                "error_code": None
+            }
+    except Exception as e:
+        logger.error(f"Error describing pod {pod_name} in namespace {namespace} for cluster {cluster_name}: {str(e)}")
+        return {
+            "status": "error",
+            "data": None,
+            "error": str(e),
+            "error_code": "KUBERNETES_ERROR"
+        }
+
+def handle_get_deployments(parameters: Dict[str, Any]) -> Dict[str, Any]:
+    """Handle get_deployments operation"""
+    region = parameters.get("region", "us-east-1")
+    cluster_name = parameters.get("cluster_name")
+    namespace = parameters.get("namespace")
+    
+    if not cluster_name:
+        return {
+            "status": "error",
+            "data": None,
+            "error": "Missing required parameter: cluster_name",
+            "error_code": "MISSING_PARAMETER"
+        }
+    
+    if not namespace:
+        return {
+            "status": "error",
+            "data": None,
+            "error": "Missing required parameter: namespace",
+            "error_code": "MISSING_PARAMETER"
+        }
+    
+    try:
+        logger.info(f"Getting deployments in namespace: {namespace} for cluster: {cluster_name} in region: {region}")
+        
+        # Try using the SDK implementation first
+        try:
+            # Use the KubernetesOperationsSDK class to get deployments
+            deployments = k8s_sdk_v2_ops.get_deployments(cluster_name, namespace, region)
+            
+            return {
+                "status": "success",
+                "data": {"deployments": deployments},
+                "error": None,
+                "error_code": None
+            }
+        except Exception as sdk_error:
+            logger.warning(f"SDK implementation failed: {str(sdk_error)}, falling back to kubectl")
+            
+            # Fall back to kubectl implementation
+            deployments = k8s_ops.get_deployments(cluster_name, namespace, region)
+            
+            return {
+                "status": "success",
+                "data": {"deployments": deployments},
+                "error": None,
+                "error_code": None
+            }
+    except Exception as e:
+        logger.error(f"Error getting deployments in namespace {namespace} for cluster {cluster_name}: {str(e)}")
+        return {
+            "status": "error",
+            "data": None,
+            "error": str(e),
+            "error_code": "KUBERNETES_ERROR"
+        }
+
+def handle_describe_deployment(parameters: Dict[str, Any]) -> Dict[str, Any]:
+    """Handle describe_deployment operation"""
+    region = parameters.get("region", "us-east-1")
+    cluster_name = parameters.get("cluster_name")
+    namespace = parameters.get("namespace")
+    deployment_name = parameters.get("deployment_name")
+    
+    if not cluster_name:
+        return {
+            "status": "error",
+            "data": None,
+            "error": "Missing required parameter: cluster_name",
+            "error_code": "MISSING_PARAMETER"
+        }
+    
+    if not namespace:
+        return {
+            "status": "error",
+            "data": None,
+            "error": "Missing required parameter: namespace",
+            "error_code": "MISSING_PARAMETER"
+        }
+    
+    if not deployment_name:
+        return {
+            "status": "error",
+            "data": None,
+            "error": "Missing required parameter: deployment_name",
+            "error_code": "MISSING_PARAMETER"
+        }
+    
+    try:
+        logger.info(f"Describing deployment: {deployment_name} in namespace: {namespace} for cluster: {cluster_name} in region: {region}")
+        
+        # Try using the SDK implementation first
+        try:
+            # Use the KubernetesOperationsSDK class to describe the deployment
+            deployment_info = k8s_sdk_v2_ops.describe_deployment(cluster_name, namespace, deployment_name, region)
+            
+            return {
+                "status": "success",
+                "data": {"deployment": deployment_info},
+                "error": None,
+                "error_code": None
+            }
+        except Exception as sdk_error:
+            logger.warning(f"SDK implementation failed: {str(sdk_error)}, falling back to kubectl")
+            
+            # Fall back to kubectl implementation
+            deployment_info = k8s_ops.describe_deployment(cluster_name, namespace, deployment_name, region)
+            
+            return {
+                "status": "success",
+                "data": {"deployment": deployment_info},
+                "error": None,
+                "error_code": None
+            }
+    except Exception as e:
+        logger.error(f"Error describing deployment {deployment_name} in namespace {namespace} for cluster {cluster_name}: {str(e)}")
+        return {
+            "status": "error",
+            "data": None,
+            "error": str(e),
+            "error_code": "KUBERNETES_ERROR"
+        }
+
+def handle_get_services(parameters: Dict[str, Any]) -> Dict[str, Any]:
+    """Handle get_services operation"""
+    region = parameters.get("region", "us-east-1")
+    cluster_name = parameters.get("cluster_name")
+    namespace = parameters.get("namespace")
+    
+    if not cluster_name:
+        return {
+            "status": "error",
+            "data": None,
+            "error": "Missing required parameter: cluster_name",
+            "error_code": "MISSING_PARAMETER"
+        }
+    
+    if not namespace:
+        return {
+            "status": "error",
+            "data": None,
+            "error": "Missing required parameter: namespace",
+            "error_code": "MISSING_PARAMETER"
+        }
+    
+    try:
+        logger.info(f"Getting services in namespace: {namespace} for cluster: {cluster_name} in region: {region}")
+        
+        # Try using the SDK implementation first
+        try:
+            # Use the KubernetesOperationsSDK class to get services
+            services = k8s_sdk_v2_ops.get_services(cluster_name, namespace, region)
+            
+            return {
+                "status": "success",
+                "data": {"services": services},
+                "error": None,
+                "error_code": None
+            }
+        except Exception as sdk_error:
+            logger.warning(f"SDK implementation failed: {str(sdk_error)}, falling back to kubectl")
+            
+            # Fall back to kubectl implementation
+            services = k8s_ops.get_services(cluster_name, namespace, region)
+            
+            return {
+                "status": "success",
+                "data": {"services": services},
+                "error": None,
+                "error_code": None
+            }
+    except Exception as e:
+        logger.error(f"Error getting services in namespace {namespace} for cluster {cluster_name}: {str(e)}")
+        return {
+            "status": "error",
+            "data": None,
+            "error": str(e),
+            "error_code": "KUBERNETES_ERROR"
+        }
+
+def handle_get_pod_logs(parameters: Dict[str, Any]) -> Dict[str, Any]:
+    """Handle get_pod_logs operation"""
+    region = parameters.get("region", "us-east-1")
+    cluster_name = parameters.get("cluster_name")
+    namespace = parameters.get("namespace")
+    pod_name = parameters.get("pod_name")
+    container = parameters.get("container")
+    tail = parameters.get("tail", 100)
+    
+    if not cluster_name:
+        return {
+            "status": "error",
+            "data": None,
+            "error": "Missing required parameter: cluster_name",
+            "error_code": "MISSING_PARAMETER"
+        }
+    
+    if not namespace:
+        return {
+            "status": "error",
+            "data": None,
+            "error": "Missing required parameter: namespace",
+            "error_code": "MISSING_PARAMETER"
+        }
+    
+    if not pod_name:
+        return {
+            "status": "error",
+            "data": None,
+            "error": "Missing required parameter: pod_name",
+            "error_code": "MISSING_PARAMETER"
+        }
+    
+    try:
+        logger.info(f"Getting logs for pod: {pod_name} in namespace: {namespace} for cluster: {cluster_name} in region: {region}")
+        
+        # Try using the SDK implementation first
+        try:
+            # Use the KubernetesOperationsSDK class to get pod logs
+            logs = k8s_sdk_v2_ops.get_pod_logs(cluster_name, namespace, pod_name, region, container, tail)
+            
+            return {
+                "status": "success",
+                "data": {"logs": logs},
+                "error": None,
+                "error_code": None
+            }
+        except Exception as sdk_error:
+            logger.warning(f"SDK implementation failed: {str(sdk_error)}, falling back to kubectl")
+            
+            # Fall back to kubectl implementation
+            logs = k8s_ops.get_pod_logs(cluster_name, namespace, pod_name, region, container, tail)
+            
+            return {
+                "status": "success",
+                "data": {"logs": logs},
+                "error": None,
+                "error_code": None
+            }
+    except Exception as e:
+        logger.error(f"Error getting logs for pod {pod_name} in namespace {namespace} for cluster {cluster_name}: {str(e)}")
+        return {
+            "status": "error",
+            "data": None,
+            "error": str(e),
+            "error_code": "KUBERNETES_ERROR"
+        }
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)

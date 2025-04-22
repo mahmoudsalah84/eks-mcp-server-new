@@ -1,0 +1,17 @@
+2025-04-17 12:00:41,757 - mcp_client - INFO - Loaded configuration from /Users/mslahdin/eks-mcp-server-new/client_config.json
+2025-04-17 12:00:41,757 - mcp_client - INFO - Starting MCP Chat Client V6 - Server: http://44.221.80.23:8000, Region: us-east-1, Model: anthropic.claude-3-sonnet-20240229-v1:0
+2025-04-17 12:00:41,757 - mcp_client - INFO - Discovering operations from MCP server: http://44.221.80.23:8000
+2025-04-17 12:00:42,176 - mcp_client - ERROR - Error discovering operations: 'str' object has no attribute 'get'
+2025-04-17 12:00:42,176 - mcp_client - WARNING - Falling back to default operations
+2025-04-17 12:00:42,192 - botocore.credentials - INFO - Found credentials in shared credentials file: ~/.aws/credentials
+2025-04-17 12:00:42,273 - mcp_client - INFO - Initializing Bedrock inline agent
+2025-04-17 12:00:42,273 - mcp_client - INFO - Gathering cluster information for region: us-east-1
+2025-04-17 12:00:42,273 - mcp_client - INFO - MCP Server Request - Operation: list_clusters, Parameters: {"region": "us-east-1"}
+2025-04-17 12:00:42,891 - mcp_client - INFO - MCP Server Response - Status: success, Operation: list_clusters
+2025-04-17 12:00:42,891 - mcp_client - INFO - Found 1 EKS clusters
+2025-04-17 12:00:42,891 - mcp_client - INFO - Getting details for cluster: {'name': 'sample-eks-cluster', 'status': 'ACTIVE', 'version': '1.32', 'endpoint': 'https://7F38E777C7617BF71A60569461FA239E.gr7.us-east-1.eks.amazonaws.com', 'created': '2025-04-15T08:23:03.850000+00:00'}
+2025-04-17 12:00:42,891 - mcp_client - INFO - MCP Server Request - Operation: describe_cluster, Parameters: {"cluster_name": {"name": "sample-eks-cluster", "status": "ACTIVE", "version": "1.32", "endpoint": "https://7F38E777C7617BF71A60569461FA239E.gr7.us-east-1.eks.amazonaws.com", "created": "2025-04-15T08:23:03.850000+00:00"}, "region": "us-east-1"}
+2025-04-17 12:00:43,303 - mcp_client - INFO - MCP Server Response - Status: error, Operation: describe_cluster
+2025-04-17 12:00:43,303 - mcp_client - ERROR - MCP Server Error - Operation: describe_cluster, Response: {"status": "error", "data": null, "error": "Parameter validation failed:\nInvalid type for parameter name, value: {'name': 'sample-eks-cluster', 'status': 'ACTIVE', 'version': '1.32', 'endpoint': 'https://7F38E777C7617BF71A60569461FA239E.gr7.us-east-1.eks.amazonaws.com', 'created': '2025-04-15T08:23:03.850000+00:00'}, type: <class 'dict'>, valid types: <class 'str'>", "error_code": "AWS_ERROR"}
+2025-04-17 12:00:43,304 - mcp_client - ERROR - Unable to retrieve details for cluster {'name': 'sample-eks-cluster', 'status': 'ACTIVE', 'version': '1.32', 'endpoint': 'https://7F38E777C7617BF71A60569461FA239E.gr7.us-east-1.eks.amazonaws.com', 'created': '2025-04-15T08:23:03.850000+00:00'}
+2025-04-17 12:00:43,305 - mcp_client - INFO - Finished gathering cluster information

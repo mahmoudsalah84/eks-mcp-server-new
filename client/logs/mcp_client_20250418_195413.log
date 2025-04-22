@@ -1,0 +1,31 @@
+2025-04-18 19:54:13,389 - mcp_client - INFO - Loaded configuration from /Users/mslahdin/eks-mcp-server-new/client_config.json
+2025-04-18 19:54:13,389 - mcp_client - INFO - Starting MCP Chat Client V6 - Server: http://54.160.166.213:8000, Region: us-east-1, Model: anthropic.claude-3-sonnet-20240229-v1:0
+2025-04-18 19:54:13,390 - mcp_client - INFO - Discovering operations from MCP server: http://54.160.166.213:8000
+2025-04-18 19:54:13,819 - mcp_client - INFO - Discovered 11 operations from server
+2025-04-18 19:54:13,831 - botocore.credentials - INFO - Found credentials in shared credentials file: ~/.aws/credentials
+2025-04-18 19:54:13,924 - mcp_client - INFO - Initializing Bedrock inline agent
+2025-04-18 19:54:13,924 - mcp_client - INFO - Gathering cluster information for region: us-east-1
+2025-04-18 19:54:13,924 - mcp_client - INFO - MCP Server Request - Operation: list_clusters, Parameters: {"region": "us-east-1"}
+2025-04-18 19:54:14,720 - mcp_client - INFO - MCP Server Response - Status: success, Operation: list_clusters
+2025-04-18 19:54:14,724 - mcp_client - INFO - Found 1 EKS clusters
+2025-04-18 19:54:14,724 - mcp_client - INFO - Getting details for cluster: sample-eks-cluster
+2025-04-18 19:54:14,724 - mcp_client - INFO - MCP Server Request - Operation: describe_cluster, Parameters: {"cluster_name": "sample-eks-cluster", "region": "us-east-1"}
+2025-04-18 19:54:15,352 - mcp_client - INFO - MCP Server Response - Status: success, Operation: describe_cluster
+2025-04-18 19:54:15,354 - mcp_client - INFO - MCP Server Request - Operation: list_nodegroups, Parameters: {"cluster_name": "sample-eks-cluster", "region": "us-east-1"}
+2025-04-18 19:54:16,065 - mcp_client - INFO - MCP Server Response - Status: success, Operation: list_nodegroups
+2025-04-18 19:54:16,065 - mcp_client - INFO - MCP Server Request - Operation: list_namespaces, Parameters: {"cluster_name": "sample-eks-cluster", "region": "us-east-1"}
+2025-04-18 19:54:18,961 - mcp_client - INFO - MCP Server Response - Status: error, Operation: list_namespaces
+2025-04-18 19:54:18,961 - mcp_client - ERROR - MCP Server Error - Operation: list_namespaces, Response: {"status": "error", "data": null, "error": "Error executing kubectl command: E0418 15:54:19.117604     158 memcache.go:265] \"Unhandled Error\" err=\"couldn't get current server API group list: the server has asked for the client to provide credentials\"\nE0418 15:54:19.132676     158 memcache.go:265] \"Unhandled Error\" err=\"couldn't get current server API group list: the server has asked for the client to provide credentials\"\nE0418 15:54:19.145860     158 memcache.go:265] \"Unhandled Error\" err=\"couldn't get current server API group list: the server has asked for the client to provide credentials\"\nE0418 15:54:19.163873     158 memcache.go:265] \"Unhandled Error\" err=\"couldn't get current server API group list: the server has asked for the client to provide credentials\"\nE0418 15:54:19.176784     158 memcache.go:265] \"Unhandled Error\" err=\"couldn't get current server API group list: the server has asked for the client to provide credentials\"\nerror: You must be logged in to the server (the server has asked for the client to provide credentials)\n", "error_code": "KUBERNETES_ERROR"}
+2025-04-18 19:54:18,962 - mcp_client - INFO - Finished gathering cluster information
+2025-04-18 19:54:28,977 - mcp_client - INFO - User input: what operations can you do?
+2025-04-18 19:54:28,977 - mcp_client - INFO - Bedrock Request - Model: anthropic.claude-3-sonnet-20240229-v1:0, Prompt Length: 27
+2025-04-18 19:54:34,288 - mcp_client - INFO - Tool use detected in response
+2025-04-18 19:54:34,289 - mcp_client - INFO - Executing MCP operation: list_clusters
+2025-04-18 19:54:34,289 - mcp_client - INFO - Executing MCP operation via inline agent: list_clusters
+2025-04-18 19:54:34,292 - mcp_client - INFO - MCP Server Request - Operation: list_clusters, Parameters: {"region": "us-east-1"}
+2025-04-18 19:54:34,988 - mcp_client - INFO - MCP Server Response - Status: success, Operation: list_clusters
+2025-04-18 19:54:34,989 - mcp_client - INFO - MCP operation result status: success
+2025-04-18 19:54:34,991 - mcp_client - INFO - Continuing conversation with tool output
+2025-04-18 19:54:49,275 - mcp_client - INFO - Bedrock Response with tool output - Response Length: 863
+2025-04-18 20:03:16,216 - mcp_client - INFO - User input: can you get my deployments
+2025-04-18 20:03:16,217 - mcp_client - INFO - Bedrock Request - Model: anthropic.claude-3-sonnet-20240229-v1:0, Prompt Length: 1067

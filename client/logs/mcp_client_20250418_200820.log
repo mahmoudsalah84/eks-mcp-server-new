@@ -1,0 +1,29 @@
+2025-04-18 20:08:20,933 - mcp_client - INFO - Loaded configuration from /Users/mslahdin/eks-mcp-server-new/client_config.json
+2025-04-18 20:08:20,933 - mcp_client - INFO - Starting MCP Chat Client V6 - Server: http://3.90.45.69:8000, Region: us-east-1, Model: anthropic.claude-3-sonnet-20240229-v1:0
+2025-04-18 20:08:20,933 - mcp_client - INFO - Discovering operations from MCP server: http://3.90.45.69:8000
+2025-04-18 20:08:21,357 - mcp_client - INFO - Discovered 11 operations from server
+2025-04-18 20:08:21,378 - botocore.credentials - INFO - Found credentials in shared credentials file: ~/.aws/credentials
+2025-04-18 20:08:21,465 - mcp_client - INFO - Initializing Bedrock inline agent
+2025-04-18 20:08:21,465 - mcp_client - INFO - Gathering cluster information for region: us-east-1
+2025-04-18 20:08:21,466 - mcp_client - INFO - MCP Server Request - Operation: list_clusters, Parameters: {"region": "us-east-1"}
+2025-04-18 20:08:22,090 - mcp_client - INFO - MCP Server Response - Status: success, Operation: list_clusters
+2025-04-18 20:08:22,090 - mcp_client - INFO - Found 1 EKS clusters
+2025-04-18 20:08:22,090 - mcp_client - INFO - Getting details for cluster: sample-eks-cluster
+2025-04-18 20:08:22,090 - mcp_client - INFO - MCP Server Request - Operation: describe_cluster, Parameters: {"cluster_name": "sample-eks-cluster", "region": "us-east-1"}
+2025-04-18 20:08:22,705 - mcp_client - INFO - MCP Server Response - Status: success, Operation: describe_cluster
+2025-04-18 20:08:22,706 - mcp_client - INFO - MCP Server Request - Operation: list_nodegroups, Parameters: {"cluster_name": "sample-eks-cluster", "region": "us-east-1"}
+2025-04-18 20:08:23,407 - mcp_client - INFO - MCP Server Response - Status: success, Operation: list_nodegroups
+2025-04-18 20:08:23,408 - mcp_client - INFO - MCP Server Request - Operation: list_namespaces, Parameters: {"cluster_name": "sample-eks-cluster", "region": "us-east-1"}
+2025-04-18 20:08:24,898 - mcp_client - INFO - MCP Server Response - Status: success, Operation: list_namespaces
+2025-04-18 20:08:24,898 - mcp_client - INFO - Finished gathering cluster information
+2025-04-18 20:08:43,554 - mcp_client - INFO - User input: hello can you help me know which eks clusters I have
+2025-04-18 20:08:43,555 - mcp_client - INFO - Bedrock Request - Model: anthropic.claude-3-sonnet-20240229-v1:0, Prompt Length: 52
+2025-04-18 20:08:49,515 - mcp_client - INFO - Tool use detected in response
+2025-04-18 20:08:49,515 - mcp_client - INFO - Executing MCP operation: list_clusters
+2025-04-18 20:08:49,515 - mcp_client - INFO - Executing MCP operation via inline agent: list_clusters
+2025-04-18 20:08:49,515 - mcp_client - INFO - MCP Server Request - Operation: list_clusters, Parameters: {"region": "us-east-1"}
+2025-04-18 20:08:50,135 - mcp_client - INFO - MCP Server Response - Status: success, Operation: list_clusters
+2025-04-18 20:08:50,138 - mcp_client - INFO - MCP operation result status: success
+2025-04-18 20:08:50,139 - mcp_client - INFO - Continuing conversation with tool output
+2025-04-18 20:08:57,318 - mcp_client - INFO - Bedrock Response with tool output - Response Length: 601
+2025-04-18 20:09:27,434 - mcp_client - INFO - User ended conversation

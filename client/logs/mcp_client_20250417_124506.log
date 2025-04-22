@@ -1,0 +1,4 @@
+2025-04-17 12:45:06,595 - mcp_client - INFO - Loaded configuration from /Users/mslahdin/eks-mcp-server-new/client/client_config.json
+2025-04-17 12:45:06,595 - mcp_client - INFO - Starting MCP Chat Client V6 - Server: http://98.80.98.250:8000, Region: us-east-1, Model: anthropic.claude-3-sonnet-20240229-v1:0
+2025-04-17 12:45:06,595 - mcp_client - INFO - Discovering operations from MCP server: http://98.80.98.250:8000
+2025-04-17 12:45:07,058 - mcp_client - INFO - Discovered 11 operations from server

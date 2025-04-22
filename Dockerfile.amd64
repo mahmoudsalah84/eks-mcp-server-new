@@ -1,0 +1,43 @@
+FROM --platform=linux/amd64 python:3.10-slim
+
+WORKDIR /app
+
+# Install dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    unzip \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install AWS CLI
+RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" \
+    && unzip awscliv2.zip \
+    && ./aws/install \
+    && rm -rf awscliv2.zip aws
+
+# Install kubectl
+RUN curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" \
+    && chmod +x kubectl \
+    && mv kubectl /usr/local/bin/
+
+# Copy requirements file
+COPY requirements.txt .
+
+# Install Python dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application code
+COPY . .
+
+# Add debug script and make it executable
+COPY debug_container.py /app/debug_container.py
+RUN chmod +x /app/debug_container.py
+
+# Disable SSL warnings for self-signed certificates
+ENV PYTHONWARNINGS="ignore:Unverified HTTPS request"
+
+# Expose port
+EXPOSE 8000
+
+# Command to run the application
+CMD ["python", "main.py"]
